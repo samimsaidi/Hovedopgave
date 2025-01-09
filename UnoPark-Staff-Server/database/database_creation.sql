@@ -1,0 +1,84 @@
+DROP TABLE IF EXISTS wifi_whitelist;
+DROP TABLE IF EXISTS schedules;
+DROP TABLE IF EXISTS shifts;
+DROP TABLE IF EXISTS feed_posts;
+DROP TABLE IF EXISTS routes;
+DROP TABLE IF EXISTS employees;
+DROP TABLE IF EXISTS users;
+
+CREATE TABLE users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('USER', 'ADMIN', 'ACCOUNTANT') NOT NULL,
+    require_password_change BOOLEAN DEFAULT true,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE employees (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    position VARCHAR(255) NOT NULL,
+    salary_type ENUM('HOURLY', 'FIXED') NOT NULL,
+    salary_rate DECIMAL(10, 2) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_by INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+CREATE TABLE shifts (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL,
+    start_time DATETIME NOT NULL,
+    end_time DATETIME,
+    status ENUM('ONGOING', 'COMPLETED', 'CANCELLED') NOT NULL DEFAULT 'ONGOING',
+    notes TEXT,
+    location VARCHAR(255),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
+);
+
+CREATE TABLE routes (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE schedules (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    employee_id INT NOT NULL,
+    start_time DATETIME NOT NULL,
+    end_time DATETIME NOT NULL,
+    route_id INT,
+    created_by INT NOT NULL,
+    schedule_type ENUM('ADMIN', 'SHIFT') NOT NULL DEFAULT 'ADMIN',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+    FOREIGN KEY (route_id) REFERENCES routes(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+CREATE TABLE feed_posts (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    created_by INT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+CREATE TABLE wifi_whitelist (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    ip_address VARCHAR(45) NOT NULL,
+    created_by INT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
